@@ -14,3 +14,8 @@ export const db_name = String(process.env.DB_NAME);
 export const db_user = String(process.env.DB_USER);
 export const db_password = String(process.env.DB_PASSWORD);
 export const db_dialect = 'postgres';
+
+// Inventory query config
+export const inventoryToShowPerPage = 20;
+export const defaultInventorySortFiled = 'name';
+export const defaultInventorySortOrder = 'ASC';

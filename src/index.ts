@@ -1,5 +1,4 @@
 import express from 'express';
-import { Request, Response } from 'express';
 
 import bodyParser from 'body-parser';
 import http from 'http';
@@ -7,6 +6,8 @@ import http from 'http';
 import db from './database';
 
 import { port as ServerPort, db_name as DBName } from './config';
+
+import inventoryRoutes from './routes/inventory.routes';
 
 const app = express();
 
@@ -26,11 +27,7 @@ async function connectDb() {
 
 connectDb();
 
-app.get('/', async (req: Request, res: Response) => {
-    res.status(200).json({
-        message: 'Hello World'
-    });
-});
+app.use('/inventory', inventoryRoutes);
 
 const server = http.createServer(app);
 
