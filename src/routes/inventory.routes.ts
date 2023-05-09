@@ -2,9 +2,11 @@ import { Router, Request, Response } from 'express';
 
 import {
     createInventory,
+    createRandomInventories,
     deleteInventoryById,
     getInventories
 } from '../services/inventory.service';
+import { validateGetInventoryQuery } from '../helpers';
 
 const router = Router();
 
@@ -12,12 +14,16 @@ const router = Router();
  * Get inventories
  */
 router.get('/', async (req: Request, res: Response) => {
-    const page: number | undefined =
-        typeof req.query.page === 'string' ? parseInt(req.query.page) : undefined;
+    // Validate query parameters
+    const { page, sortField, sortOrder, locationFilter } = validateGetInventoryQuery(req.query);
 
-    const result = await getInventories(page);
+    const result = await getInventories(page, sortField, sortOrder, locationFilter);
 
-    res.status(200).json(result);
+    if (result) {
+        return res.status(200).json(result);
+    }
+
+    res.status(400).json();
 });
 
 /**
@@ -45,6 +51,12 @@ router.delete('/:id', async (req: Request, res: Response) => {
     }
 
     res.status(200).json();
+});
+
+router.get('/createRandomInventories/:amount', async (req: Request, res: Response) => {
+    await createRandomInventories(parseInt(req.params.amount));
+
+    return res.status(200).json();
 });
 
 export default router;

@@ -1,35 +1,34 @@
 import { Inventory } from '../models/inventory.model';
 
-import {
-    ICreateInventory,
-    IGetInventories,
-    IInventories,
-    Locations
-} from '../types/inventory.types';
+import { ICreateInventory, IGetInventories, IInventories } from '../types/inventory.types';
 
 import {
     defaultInventorySortFiled as defaultSortFiled,
     defaultInventorySortOrder as defaultSortOrder,
-    inventoryToShowPerPage
+    inventoryToShowPerPage,
+    validLocations
 } from '../config';
+
+import { isValidLocation, randomNumInRange } from '../helpers';
 
 /**
  * Return inventories
  * @param currentPage - current page for pagination
- * @param sortFiled - sort field
+ * @param sortField - sort field
  * @param sortOrder - sort order
  * @param locationFilter - location filter value
  */
 export async function getInventories(
     currentPage: number = 1,
-    sortField = defaultSortFiled,
-    sortOrder = defaultSortOrder,
-    locationFilter = null
+    sortField: string | undefined = defaultSortFiled,
+    sortOrder: string | undefined = defaultSortOrder,
+    locationFilter: string | undefined = ''
 ): Promise<IGetInventories> {
     const res: IGetInventories = {
         inventories: [],
         currentPage: currentPage,
-        totalPages: 0
+        totalPages: 0,
+        totalInventories: 0
     };
 
     // How many inventories to return per page
@@ -54,7 +53,7 @@ export async function getInventories(
     // Check if location filter is provided
     if (locationFilter) {
         // Check if location filter value is valid
-        if (isLocationValid(locationFilter)) {
+        if (isValidLocation(locationFilter)) {
             // Update options with location filter
             options.where = {
                 location: locationFilter
@@ -76,6 +75,7 @@ export async function getInventories(
 
     res.inventories = inventories.rows;
     res.totalPages = Math.ceil(inventories.count / perPage);
+    res.totalInventories = inventories.count;
 
     return res;
 }
@@ -85,10 +85,7 @@ export async function getInventories(
  * @param data - inventory data
  */
 export async function createInventory(data: ICreateInventory): Promise<boolean> {
-    // Check if requested location value is valid
-    const isValidLocation: boolean = isLocationValid(data.location.toString());
-
-    if (!isValidLocation) {
+    if (!isValidLocation(data.location?.toString())) {
         console.log(`Unable to create new inventory, invalid location provided: ${data.location}`);
         return false;
     }
@@ -120,9 +117,9 @@ export async function deleteInventoryById(id: number): Promise<boolean> {
     }
 
     try {
-        inventoryToDelete.destroy();
+        await inventoryToDelete.destroy();
     } catch (e) {
-        console.log(`Error occuared while deleting inventory with id ${id}, error : ${e}`);
+        console.log(`Error occurred while deleting inventory with id ${id}, error : ${e}`);
         return false;
     }
 
@@ -130,9 +127,27 @@ export async function deleteInventoryById(id: number): Promise<boolean> {
 }
 
 /**
- * Checks if location value is included in Locations enum
- * @param location - location value
+ *  Creates random inventories
+ * @param total - count of random inventories to create
  */
-function isLocationValid(location: string): boolean {
-    return Object.values(Locations).includes(location);
+export async function createRandomInventories(total: number = 300000): Promise<void> {
+    // todo replace with bulkupdate
+    for (let i = 0; i < total; i++) {
+        const rName: string = (Math.random() + 1).toString(36).substring(7);
+        const rPrice: number = randomNumInRange(5, 1000);
+
+        const maxLocationsIndex = validLocations.length - 1;
+
+        const rLocationIndex = randomNumInRange(0, maxLocationsIndex);
+
+        const rLocation = validLocations[rLocationIndex];
+
+        const data: ICreateInventory = {
+            name: rName,
+            price: rPrice,
+            location: rLocation
+        };
+
+        await createInventory(data);
+    }
 }

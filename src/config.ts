@@ -19,3 +19,7 @@ export const db_dialect = 'postgres';
 export const inventoryToShowPerPage = 20;
 export const defaultInventorySortFiled = 'name';
 export const defaultInventorySortOrder = 'ASC';
+
+export const validLocations = ['მთავარი ოფისი', 'კავეა გალერია', 'კავეა თბილისი მოლი', 'კავეა ისთ ფოინთი'];
+export const validSortFields = ['name', 'price'];
+export const validSortOrders = ['ASC', 'DESC'];
